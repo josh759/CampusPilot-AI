@@ -1,0 +1,77 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AssignmentStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+}
+
+model User {
+  id             String          @id @default(cuid())
+  name           String
+  email          String          @unique
+  semester       String          @default("Fall 2026")
+  date           DateTime        @default(now())
+  studyHours     Float           @default(0)
+  studyGoal      Float           @default(0)
+  jobApplications Int             @default(0)
+  interviews     Int             @default(0)
+  createdAt      DateTime        @default(now())
+  courses        Course[]
+  assignments    Assignment[]
+  scheduleEvents ScheduleEvent[]
+
+  @@index([email])
+}
+
+model Course {
+  id          String       @id @default(cuid())
+  title       String
+  courseCode  String
+  instructor  String
+  progress    Int          @default(0)
+  totalModules Int         @default(1)
+  createdAt   DateTime     @default(now())
+  userId      String
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  assignments Assignment[]
+
+  @@index([userId])
+  @@unique([userId, courseCode])
+}
+
+model Assignment {
+  id        String           @id @default(cuid())
+  title     String
+  dueDate   DateTime
+  status    AssignmentStatus @default(NOT_STARTED)
+  courseId  String
+  userId    String
+  createdAt DateTime         @default(now())
+  course    Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, dueDate])
+  @@index([courseId])
+}
+
+model ScheduleEvent {
+  id        String   @id @default(cuid())
+  title     String
+  startTime DateTime
+  endTime   DateTime
+  location  String
+  type      String   @default("Class")
+  userId    String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, startTime])
+}

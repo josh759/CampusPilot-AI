@@ -1,9 +1,9 @@
 # CampusPilot AI
 
-CampusPilot AI is a planned AI-assisted student workspace for organizing academic
-work and finding useful campus information. The repository currently contains a
-Next.js starter frontend; the student-facing features below are proposed and are
-not implemented yet.
+CampusPilot AI is an AI-assisted student workspace for organizing academic work
+and planning career goals. Sprint 2 adds a PostgreSQL database, Prisma data layer,
+server APIs, and assignment CRUD to the responsive Sprint 1 frontend. AI tutoring,
+authentication, and document storage remain planned features.
 
 ## Planned features
 
@@ -22,9 +22,10 @@ need to be decided.
 - TypeScript 5
 - Tailwind CSS 4
 - ESLint 9
+- PostgreSQL with Prisma ORM
 - Node.js and npm for development and dependency management
 
-No backend, database, authentication service, or AI provider is configured yet.
+Authentication and AI providers are intentionally not configured yet.
 
 ## Current repository structure
 
@@ -44,11 +45,16 @@ CampusPilotAI/
     |-- postcss.config.mjs
     |-- tsconfig.json
     |-- public/            # Static image assets
-    `-- src/app/
-        |-- favicon.ico
-        |-- globals.css
-        |-- layout.tsx
-        `-- page.tsx       # Current starter homepage
+    |-- prisma/
+    |   |-- schema.prisma  # PostgreSQL models and relations
+    |   `-- seed.ts        # Development seed records
+    `-- src/
+        |-- app/          # Pages, API routes, layout, and styles
+        |-- components/   # Shared, landing, and dashboard UI components
+        `-- lib/
+            |-- db/        # Server-side data-access functions
+            |-- db.ts      # Prisma client singleton
+            `-- types.ts    # Shared serialized UI types
 ```
 
 Dependencies and generated build files are excluded from version control.
@@ -61,23 +67,31 @@ and npm 10.9.0. From the repository root, run in Windows PowerShell:
 ```powershell
 cd frontend
 npm.cmd ci
+npm.cmd run db:generate
+npm.cmd run db:migrate -- --name init
+npm.cmd run db:seed
 npm.cmd run dev
 ```
 
+Set `DATABASE_URL` in `frontend/.env` before running the migration or seed. Copy
+`frontend/.env.example` and use a PostgreSQL database you control. Never commit
+real credentials.
+
 Open the local URL printed in the terminal, normally <http://localhost:3000>.
 Press Ctrl+C to stop the server. Edit `frontend/src/app/page.tsx` to change the
-homepage. On macOS or Linux, use `npm` instead of `npm.cmd`.
+homepage composition. Visit `/dashboard` for the student workspace. On macOS or
+Linux, use `npm` instead of `npm.cmd`.
 
-See [frontend/README.md](frontend/README.md) for lint and production build commands.
-No environment variables are required for the current starter application.
+See [frontend/README.md](frontend/README.md) for API routes, database commands,
+lint, and production build commands.
 
 ## Development roadmap
 
-1. Establish the repository, documentation, and passing lint/build checks.
-2. Confirm the first student workflows and design the dashboard.
-3. Implement course, assignment, and task interfaces.
-4. Choose a backend, data storage, and authentication approach.
+1. Establish the repository, documentation, and frontend design.
+2. Add PostgreSQL persistence, Prisma models, seed data, and APIs. **Complete.**
+3. Add database-backed course, assignment, and schedule interfaces. **Complete.**
+4. Add authentication and user-specific access.
 5. Add AI assistance using approved data sources and server-side credentials.
-6. Test accessibility, core workflows, and error handling before deployment.
+6. Add automated tests, accessibility validation, and deployment checks.
 
 Keep local credentials in ignored environment files; do not commit secrets.

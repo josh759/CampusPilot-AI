@@ -19,6 +19,7 @@ coverage/
 
 # Local environment and generated TypeScript files
 .env*
+!**/.env.example
 !frontend/.env.example
 *.tsbuildinfo
 next-env.d.ts

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { AssignmentManager } from "@/components/dashboard/assignment-manager";
-import { CourseGrid } from "@/components/dashboard/course-grid";
+import { LiveCourseWorkspace } from "@/components/dashboard/live-course-workspace";
 import { Sidebar } from "@/components/dashboard/sidebar";
 import { StudyAssistant } from "@/components/dashboard/study-assistant";
 import { SummaryCards } from "@/components/dashboard/summary-cards";
@@ -34,7 +33,7 @@ export default function DashboardPage() {
           <p className="mb-6 rounded-xl border border-[#e6dfd2] bg-[#fff9ef] px-4 py-3 text-xs leading-5 text-[#725538]"><strong className="font-semibold">Demo workspace.</strong> Dashboard shows sample records for {fullDateLabel}.</p>
           <SummaryCards courses={demoCourses} assignments={demoAssignments} student={demoUser} />
           <div className="mt-8 grid items-start gap-7 xl:grid-cols-[minmax(0,1.5fr)_minmax(280px,1fr)] 2xl:grid-cols-[minmax(0,1.75fr)_minmax(300px,1fr)]">
-            <div className="min-w-0 space-y-7"><CourseGrid courses={demoCourses} /><AssignmentManager /></div>
+            <div className="min-w-0 space-y-7"><LiveCourseWorkspace /></div>
             <div className="min-w-0 space-y-6"><TodaySchedule schedule={demoSchedule} dateLabel={`${dateLabel} · Sample schedule`} /><StudyAssistant /></div>
           </div>
           <footer className="mt-9 flex flex-wrap justify-between gap-3 border-t border-line pt-5 text-xs text-muted"><p>CampusPilot AI · A little progress, every day.</p><Link href="/" className="rounded hover:text-ink">Back to home <span aria-hidden="true">↗</span></Link></footer>

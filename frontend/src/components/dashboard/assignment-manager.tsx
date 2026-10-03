@@ -1,8 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
-import { getAccessToken } from "@/lib/api/auth";
+import { useEffect, useState, type FormEvent } from "react";
 import { ApiRequestError, apiRequest } from "@/lib/api/client";
 import type { Assignment, AssignmentStatus, Course } from "@/lib/api/types";
 
@@ -22,9 +20,12 @@ function statusLabel(status: AssignmentStatus) {
   return status === "not_started" ? "Not started" : status === "in_progress" ? "In progress" : "Completed";
 }
 
-export function AssignmentManager() {
-  const router = useRouter();
-  const [courses, setCourses] = useState<Course[]>([]);
+type AssignmentManagerProps = {
+  courses: Course[];
+  redirectToLogin: () => void;
+};
+
+export function AssignmentManager({ courses, redirectToLogin }: AssignmentManagerProps) {
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [title, setTitle] = useState("");
   const [dueDate, setDueDate] = useState("");
@@ -34,32 +35,14 @@ export function AssignmentManager() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const redirectToLogin = useCallback(() => {
-    router.replace("/login");
-  }, [router]);
-
   useEffect(() => {
     let isActive = true;
-
-    if (!getAccessToken()) {
-      redirectToLogin();
-      return () => {
-        isActive = false;
-      };
-    }
 
     async function loadData() {
       setError("");
       try {
-        const [loadedCourses, loadedAssignments] = await Promise.all([
-          apiRequest<Course[]>("/courses", { method: "GET" }, redirectToLogin),
-          apiRequest<Assignment[]>("/assignments", { method: "GET" }, redirectToLogin),
-        ]);
-        if (isActive) {
-          setCourses(loadedCourses);
-          setAssignments(loadedAssignments);
-          setCourseId(loadedCourses[0]?.id ?? "");
-        }
+        const loadedAssignments = await apiRequest<Assignment[]>("/assignments", { method: "GET" }, redirectToLogin);
+        if (isActive) setAssignments(loadedAssignments);
       } catch (requestError) {
         if (isActive && !(requestError instanceof ApiRequestError && requestError.status === 401)) {
           setError(requestError instanceof Error ? requestError.message : "Unable to load your assignments.");
@@ -74,6 +57,14 @@ export function AssignmentManager() {
       isActive = false;
     };
   }, [redirectToLogin]);
+
+  // Default the form's selected course to the first available course,
+  // filling in once courses load or after the selected course is removed.
+  useEffect(() => {
+    if (courses.length > 0 && !courses.some((course) => course.id === courseId)) {
+      setCourseId(courses[0].id);
+    }
+  }, [courses, courseId]);
 
   async function addAssignment(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

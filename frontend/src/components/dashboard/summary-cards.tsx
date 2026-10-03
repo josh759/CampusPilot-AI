@@ -1,10 +1,23 @@
 import { Icon, type IconName } from "@/components/icon";
-import type { AssignmentRecord, CourseRecord } from "@/lib/demo-data";
+import type { Assignment, Course } from "@/lib/api/types";
 
-export function SummaryCards({ courses, assignments, student }: { courses: CourseRecord[]; assignments: AssignmentRecord[]; student: { semester: string; studyHours: number; studyGoal: number; jobApplications: number; interviews: number } }) {
+type StudentStats = {
+  semester: string;
+  studyHours: number;
+  studyGoal: number;
+  jobApplications: number;
+  interviews: number;
+};
+
+export function SummaryCards({ courses, assignments, student }: { courses: Course[]; assignments: Assignment[]; student: StudentStats }) {
+  const now = new Date();
+  const upcomingCount = assignments.filter((assignment) => {
+    const due = new Date(assignment.due_at);
+    return assignment.status !== "completed" && due.getTime() >= now.getTime();
+  }).length;
   const metrics: { label: string; value: string; detail: string; icon: IconName }[] = [
     { label: "Current courses", value: String(courses.length).padStart(2, "0"), detail: student.semester, icon: "book" },
-    { label: "Upcoming assignments", value: String(assignments.length).padStart(2, "0"), detail: "Due in the next 7 days", icon: "calendar" },
+    { label: "Upcoming assignments", value: String(upcomingCount).padStart(2, "0"), detail: "Not yet completed", icon: "calendar" },
     { label: "Study hours", value: String(student.studyHours), detail: `of ${student.studyGoal} hour weekly goal`, icon: "clock" },
     { label: "Job applications", value: String(student.jobApplications).padStart(2, "0"), detail: `${student.interviews} interviews scheduled`, icon: "briefcase" },
   ];

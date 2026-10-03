@@ -22,41 +22,29 @@ function statusLabel(status: AssignmentStatus) {
 
 type AssignmentManagerProps = {
   courses: Course[];
+  assignments: Assignment[];
+  isLoading: boolean;
   redirectToLogin: () => void;
+  onAssignmentCreated: (assignment: Assignment) => void;
+  onAssignmentUpdated: (assignment: Assignment) => void;
+  onAssignmentDeleted: (id: string) => void;
 };
 
-export function AssignmentManager({ courses, redirectToLogin }: AssignmentManagerProps) {
-  const [assignments, setAssignments] = useState<Assignment[]>([]);
+export function AssignmentManager({
+  courses,
+  assignments,
+  isLoading,
+  redirectToLogin,
+  onAssignmentCreated,
+  onAssignmentUpdated,
+  onAssignmentDeleted,
+}: AssignmentManagerProps) {
   const [title, setTitle] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [courseId, setCourseId] = useState("");
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
-
-  useEffect(() => {
-    let isActive = true;
-
-    async function loadData() {
-      setError("");
-      try {
-        const loadedAssignments = await apiRequest<Assignment[]>("/assignments", { method: "GET" }, redirectToLogin);
-        if (isActive) setAssignments(loadedAssignments);
-      } catch (requestError) {
-        if (isActive && !(requestError instanceof ApiRequestError && requestError.status === 401)) {
-          setError(requestError instanceof Error ? requestError.message : "Unable to load your assignments.");
-        }
-      } finally {
-        if (isActive) setIsLoading(false);
-      }
-    }
-
-    void loadData();
-    return () => {
-      isActive = false;
-    };
-  }, [redirectToLogin]);
 
   // Default the form's selected course to the first available course,
   // filling in once courses load or after the selected course is removed.
@@ -85,7 +73,7 @@ export function AssignmentManager({ courses, redirectToLogin }: AssignmentManage
           course_id: courseId,
         }),
       }, redirectToLogin);
-      setAssignments((current) => [...current, createdAssignment].sort((a, b) => a.due_at.localeCompare(b.due_at)));
+      onAssignmentCreated(createdAssignment);
       setTitle("");
       setDueDate("");
     } catch (requestError) {
@@ -105,7 +93,7 @@ export function AssignmentManager({ courses, redirectToLogin }: AssignmentManage
         method: "PATCH",
         body: JSON.stringify({ status: "completed" }),
       }, redirectToLogin);
-      setAssignments((current) => current.map((assignment) => assignment.id === id ? updatedAssignment : assignment));
+      onAssignmentUpdated(updatedAssignment);
     } catch (requestError) {
       if (!(requestError instanceof ApiRequestError && requestError.status === 401)) {
         setError(requestError instanceof Error ? requestError.message : "Unable to complete assignment.");
@@ -120,7 +108,7 @@ export function AssignmentManager({ courses, redirectToLogin }: AssignmentManage
     setError("");
     try {
       await apiRequest<void>(`/assignments/${id}`, { method: "DELETE" }, redirectToLogin);
-      setAssignments((current) => current.filter((assignment) => assignment.id !== id));
+      onAssignmentDeleted(id);
     } catch (requestError) {
       if (!(requestError instanceof ApiRequestError && requestError.status === 401)) {
         setError(requestError instanceof Error ? requestError.message : "Unable to delete assignment.");

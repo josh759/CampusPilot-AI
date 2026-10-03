@@ -3,10 +3,9 @@ import Link from "next/link";
 import { LiveCourseWorkspace } from "@/components/dashboard/live-course-workspace";
 import { Sidebar } from "@/components/dashboard/sidebar";
 import { StudyAssistant } from "@/components/dashboard/study-assistant";
-import { SummaryCards } from "@/components/dashboard/summary-cards";
 import { TodaySchedule } from "@/components/dashboard/today-schedule";
 import { Icon } from "@/components/icon";
-import { demoAssignments, demoCourses, demoSchedule, demoUser } from "@/lib/demo-data";
+import { demoSchedule, demoUser } from "@/lib/demo-data";
 
 export const dynamic = "force-dynamic";
 
@@ -31,9 +30,8 @@ export default function DashboardPage() {
             <Link href="/dashboard#schedule" className="button-secondary w-fit"><Icon name="calendar" className="h-4 w-4" />Today’s schedule</Link>
           </header>
           <p className="mb-6 rounded-xl border border-[#e6dfd2] bg-[#fff9ef] px-4 py-3 text-xs leading-5 text-[#725538]"><strong className="font-semibold">Demo workspace.</strong> Dashboard shows sample records for {fullDateLabel}.</p>
-          <SummaryCards courses={demoCourses} assignments={demoAssignments} student={demoUser} />
-          <div className="mt-8 grid items-start gap-7 xl:grid-cols-[minmax(0,1.5fr)_minmax(280px,1fr)] 2xl:grid-cols-[minmax(0,1.75fr)_minmax(300px,1fr)]">
-            <div className="min-w-0 space-y-7"><LiveCourseWorkspace /></div>
+          <div className="grid items-start gap-7 xl:grid-cols-[minmax(0,1.5fr)_minmax(280px,1fr)] 2xl:grid-cols-[minmax(0,1.75fr)_minmax(300px,1fr)]">
+            <div className="min-w-0 space-y-7"><LiveCourseWorkspace student={demoUser} /></div>
             <div className="min-w-0 space-y-6"><TodaySchedule schedule={demoSchedule} dateLabel={`${dateLabel} · Sample schedule`} /><StudyAssistant /></div>
           </div>
           <footer className="mt-9 flex flex-wrap justify-between gap-3 border-t border-line pt-5 text-xs text-muted"><p>CampusPilot AI · A little progress, every day.</p><Link href="/" className="rounded hover:text-ink">Back to home <span aria-hidden="true">↗</span></Link></footer>

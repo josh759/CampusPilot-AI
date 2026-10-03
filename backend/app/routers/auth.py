@@ -3,9 +3,8 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy import select
-from sqlalchemy.orm import Session
 
-from app.database import get_db
+from app.dependencies import DatabaseSession
 from app.models import User
 from app.schemas import Token
 from app.security import create_access_token, verify_password
@@ -16,7 +15,6 @@ router = APIRouter(
     tags=["authentication"],
 )
 
-DatabaseSession = Annotated[Session, Depends(get_db)]
 LoginForm = Annotated[OAuth2PasswordRequestForm, Depends()]
 
 

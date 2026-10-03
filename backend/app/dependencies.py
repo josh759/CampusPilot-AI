@@ -55,3 +55,6 @@ def get_current_user(
         raise credentials_error
 
     return user
+
+
+CurrentUser = Annotated[User, Depends(get_current_user)]

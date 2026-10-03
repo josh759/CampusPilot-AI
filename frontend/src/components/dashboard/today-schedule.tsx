@@ -1,4 +1,4 @@
-import type { ScheduleRecord } from "@/lib/types";
+import type { ScheduleRecord } from "@/lib/demo-data";
 
 export function TodaySchedule({ schedule, dateLabel }: { schedule: ScheduleRecord[]; dateLabel: string }) {
   return (

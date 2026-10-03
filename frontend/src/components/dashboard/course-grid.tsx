@@ -1,5 +1,5 @@
 import { Icon } from "@/components/icon";
-import type { CourseRecord } from "@/lib/types";
+import type { CourseRecord } from "@/lib/demo-data";
 
 const accents = {
   blue: { badge: "bg-[#e7f0f8] text-[#365d82]", bar: "bg-[#618bad]" },

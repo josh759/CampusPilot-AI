@@ -1,25 +1,17 @@
-from typing import Annotated
-
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session
 
-from app.database import get_db
+from app.dependencies import CurrentUser, DatabaseSession
 from app.models import User
 from app.schemas import UserCreate, UserRead
 from app.security import hash_password
-
-from app.dependencies import get_current_user
 
 router = APIRouter(
     prefix="/users",
     tags=["users"],
 )
 
-DatabaseSession = Annotated[Session, Depends(get_db)]
-
-CurrentUser = Annotated[User, Depends(get_current_user)] 
 
 @router.get(
     "/me",

@@ -1,6 +1,7 @@
+from collections.abc import Generator
+
 from sqlalchemy import URL, create_engine, text
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
-from collections.abc import Generator
 
 from app.config import get_settings
 

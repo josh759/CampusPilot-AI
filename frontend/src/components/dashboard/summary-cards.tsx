@@ -1,5 +1,5 @@
 import { Icon, type IconName } from "@/components/icon";
-import type { AssignmentRecord, CourseRecord } from "@/lib/types";
+import type { AssignmentRecord, CourseRecord } from "@/lib/demo-data";
 
 export function SummaryCards({ courses, assignments, student }: { courses: CourseRecord[]; assignments: AssignmentRecord[]; student: { semester: string; studyHours: number; studyGoal: number; jobApplications: number; interviews: number } }) {
   const metrics: { label: string; value: string; detail: string; icon: IconName }[] = [

@@ -57,3 +57,13 @@ export type ValidationErrorItem = {
 export type ErrorResponse = {
   detail?: string | ValidationErrorItem[];
 };
+
+export type StudyAssistantChatRequest = {
+  message: string;
+  course_id: string | null;
+};
+
+export type StudyAssistantChatResponse = {
+  answer: string;
+  course_id: string | null;
+};

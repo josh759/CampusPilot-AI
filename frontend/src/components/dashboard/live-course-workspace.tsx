@@ -138,7 +138,11 @@ export function LiveCourseWorkspace({ student, dateLabel }: LiveCourseWorkspaceP
           onScheduleUpdated={handleScheduleUpdated}
           onScheduleDeleted={handleScheduleDeleted}
         />
-        <StudyAssistant />
+        <StudyAssistant
+          courses={courses}
+          isLoading={isLoading}
+          redirectToLogin={redirectToLogin}
+        />
       </div>
     </>
   );

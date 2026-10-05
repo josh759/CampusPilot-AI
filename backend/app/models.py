@@ -1,7 +1,7 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, time
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, String, UniqueConstraint, Uuid, func
+from sqlalchemy import Boolean, CheckConstraint, DateTime, ForeignKey, Integer, String, Time, UniqueConstraint, Uuid, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -49,6 +49,10 @@ class User(Base):
         back_populates="user",
         cascade="all, delete-orphan",
     )
+    schedule_items: Mapped[list["ScheduleItem"]] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
 
 
 class Course(Base):
@@ -81,6 +85,10 @@ class Course(Base):
         back_populates="course",
         cascade="all, delete-orphan",
     )
+    schedule_items: Mapped[list["ScheduleItem"]] = relationship(
+        back_populates="course",
+        passive_deletes=True,
+    )
 
 
 class Assignment(Base):
@@ -112,3 +120,48 @@ class Assignment(Base):
     )
 
     course: Mapped["Course"] = relationship(back_populates="assignments")
+
+
+class ScheduleItem(Base):
+    __tablename__ = "schedule_items"
+    __table_args__ = (
+        CheckConstraint(
+            "weekday >= 0 AND weekday <= 6",
+            name="ck_schedule_items_weekday",
+        ),
+        CheckConstraint(
+            "end_time > start_time",
+            name="ck_schedule_items_end_after_start",
+        ),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        Uuid,
+        primary_key=True,
+        default=uuid.uuid4,
+    )
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    weekday: Mapped[int] = mapped_column(Integer, nullable=False)
+    start_time: Mapped[time] = mapped_column(Time, nullable=False)
+    end_time: Mapped[time] = mapped_column(Time, nullable=False)
+    location: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    course_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid,
+        ForeignKey("courses.id", ondelete="SET NULL"),
+        index=True,
+        nullable=True,
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid,
+        ForeignKey("users.id", ondelete="CASCADE"),
+        index=True,
+        nullable=False,
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
+    )
+
+    user: Mapped["User"] = relationship(back_populates="schedule_items")
+    course: Mapped["Course | None"] = relationship(back_populates="schedule_items")

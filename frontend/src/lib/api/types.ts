@@ -32,6 +32,20 @@ export type Assignment = {
   created_at: string;
 };
 
+// Recurring weekly schedule item. weekday is Monday=0 through Sunday=6;
+// start_time/end_time are "HH:MM:SS".
+export type ScheduleItem = {
+  id: string;
+  title: string;
+  weekday: number;
+  start_time: string;
+  end_time: string;
+  location: string | null;
+  course_id: string | null;
+  user_id: string;
+  created_at: string;
+};
+
 // FastAPI returns {"detail": "message"} for HTTP errors and
 // {"detail": [{ loc, msg, type }, ...]} for request validation errors.
 export type ValidationErrorItem = {

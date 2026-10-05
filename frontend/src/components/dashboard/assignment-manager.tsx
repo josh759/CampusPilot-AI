@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { ApiRequestError, apiRequest } from "@/lib/api/client";
 import type { Assignment, AssignmentStatus, Course } from "@/lib/api/types";
 
@@ -46,13 +46,12 @@ export function AssignmentManager({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
 
-  // Default the form's selected course to the first available course,
-  // filling in once courses load or after the selected course is removed.
-  useEffect(() => {
-    if (courses.length > 0 && !courses.some((course) => course.id === courseId)) {
-      setCourseId(courses[0].id);
-    }
-  }, [courses, courseId]);
+  // Derive the effective selected course from render state instead of an
+  // effect: fall back to the first course when none is selected or the
+  // selected one is no longer present.
+  const effectiveCourseId = courses.some((course) => course.id === courseId)
+    ? courseId
+    : courses[0]?.id ?? "";
 
   async function addAssignment(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -70,7 +69,7 @@ export function AssignmentManager({
           title: title.trim(),
           due_at: parsedDueDate.toISOString(),
           status: "not_started",
-          course_id: courseId,
+          course_id: effectiveCourseId,
         }),
       }, redirectToLogin);
       onAssignmentCreated(createdAssignment);
@@ -128,8 +127,8 @@ export function AssignmentManager({
           <label className="sr-only" htmlFor="assignment-due-date">Due date</label>
           <input id="assignment-due-date" type="datetime-local" value={dueDate} onChange={(event) => setDueDate(event.target.value)} required className="min-h-11 rounded-xl border border-line px-3 text-sm text-muted outline-none focus:border-[#166c83]" />
           <label className="sr-only" htmlFor="assignment-course">Course</label>
-          <select id="assignment-course" value={courseId} onChange={(event) => setCourseId(event.target.value)} required disabled={isLoading || courses.length === 0} className="min-h-11 rounded-xl border border-line bg-white px-3 text-sm text-muted outline-none focus:border-[#166c83]"><option value="" disabled>{isLoading ? "Loading courses…" : "Select course"}</option>{courses.map((course) => <option key={course.id} value={course.id}>{course.code} · {course.name}</option>)}</select>
-          <button type="submit" disabled={isLoading || isSubmitting || !courseId} className="button-primary min-h-11 px-4 disabled:cursor-not-allowed disabled:opacity-60">{isSubmitting ? "Adding…" : "Add"}</button>
+          <select id="assignment-course" value={effectiveCourseId} onChange={(event) => setCourseId(event.target.value)} required disabled={isLoading || courses.length === 0} className="min-h-11 rounded-xl border border-line bg-white px-3 text-sm text-muted outline-none focus:border-[#166c83]"><option value="" disabled>{isLoading ? "Loading courses…" : "Select course"}</option>{courses.map((course) => <option key={course.id} value={course.id}>{course.code} · {course.name}</option>)}</select>
+          <button type="submit" disabled={isLoading || isSubmitting || !effectiveCourseId} className="button-primary min-h-11 px-4 disabled:cursor-not-allowed disabled:opacity-60">{isSubmitting ? "Adding…" : "Add"}</button>
         </form>
         {!isLoading && courses.length === 0 && <p className="mt-3 text-xs text-muted">Add a course before creating an assignment.</p>}
         {error && <p role="alert" className="mt-3 text-xs text-[#9b402b]">{error}</p>}

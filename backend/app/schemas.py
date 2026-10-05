@@ -1,8 +1,8 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, time
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, model_validator
 
 
 class UserCreate(BaseModel):
@@ -69,6 +69,58 @@ class AssignmentRead(BaseModel):
     due_at: datetime
     status: AssignmentStatus
     course_id: uuid.UUID
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+def _check_time_range(start_time: time, end_time: time | None) -> None:
+    if end_time is not None and end_time <= start_time:
+        raise ValueError("end_time must be later than start_time")
+
+
+class ScheduleItemBase(BaseModel):
+    title: str = Field(min_length=1, max_length=255)
+    weekday: int = Field(ge=0, le=6)
+    start_time: time
+    end_time: time
+    location: str | None = Field(default=None, max_length=255)
+    course_id: uuid.UUID | None = None
+
+
+class ScheduleItemCreate(ScheduleItemBase):
+    @model_validator(mode="after")
+    def end_after_start(self) -> "ScheduleItemCreate":
+        _check_time_range(self.start_time, self.end_time)
+        return self
+
+
+class ScheduleItemUpdate(BaseModel):
+    title: str | None = Field(default=None, min_length=1, max_length=255)
+    weekday: int | None = Field(default=None, ge=0, le=6)
+    start_time: time | None = None
+    end_time: time | None = None
+    location: str | None = Field(default=None, max_length=255)
+    course_id: uuid.UUID | None = None
+
+    # Only validates when both times are present in the same request;
+    # the route re-checks the merged result against the stored row.
+    @model_validator(mode="after")
+    def end_after_start(self) -> "ScheduleItemUpdate":
+        if self.start_time is not None:
+            _check_time_range(self.start_time, self.end_time)
+        return self
+
+
+class ScheduleItemRead(BaseModel):
+    id: uuid.UUID
+    title: str
+    weekday: int
+    start_time: time
+    end_time: time
+    location: str | None
+    course_id: uuid.UUID | None
+    user_id: uuid.UUID
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)

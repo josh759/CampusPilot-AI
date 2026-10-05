@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime, time
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, model_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator, model_validator
 
 
 class UserCreate(BaseModel):
@@ -124,3 +124,21 @@ class ScheduleItemRead(BaseModel):
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class StudyAssistantChatRequest(BaseModel):
+    message: str = Field(min_length=1, max_length=2000)
+    course_id: uuid.UUID | None = None
+
+    @field_validator("message")
+    @classmethod
+    def message_not_blank(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("Message must not be blank")
+        return value
+
+
+class StudyAssistantChatResponse(BaseModel):
+    answer: str
+    course_id: uuid.UUID | None = None

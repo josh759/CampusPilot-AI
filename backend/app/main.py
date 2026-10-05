@@ -6,6 +6,7 @@ from app.routers.assignments import router as assignments_router
 from app.routers.auth import router as auth_router
 from app.routers.courses import router as courses_router
 from app.routers.schedule import router as schedule_router
+from app.routers.study_assistant import router as study_assistant_router
 from app.routers.users import router as users_router
 
 app = FastAPI(
@@ -26,6 +27,7 @@ app.include_router(users_router)
 app.include_router(courses_router)
 app.include_router(assignments_router)
 app.include_router(schedule_router)
+app.include_router(study_assistant_router)
 
 
 @app.get("/")

@@ -67,3 +67,37 @@ export type StudyAssistantChatResponse = {
   answer: string;
   course_id: string | null;
 };
+
+export type StudyConversationSummary = {
+  id: string;
+  title: string;
+  course_id: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type StudyMessage = {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  created_at: string;
+};
+
+export type StudyConversationDetail = StudyConversationSummary & {
+  messages: StudyMessage[];
+};
+
+export type StudyConversationCreateRequest = {
+  course_id: string | null;
+  title: string | null;
+};
+
+export type StudyMessageCreateRequest = {
+  message: string;
+};
+
+export type StudyMessageExchange = {
+  user_message: StudyMessage;
+  assistant_message: StudyMessage;
+  conversation: StudyConversationSummary;
+};

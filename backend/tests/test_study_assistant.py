@@ -161,6 +161,14 @@ class StudyAssistantTests(unittest.TestCase):
         ):
             self.assertNotIn(forbidden, sent)
 
+    def test_instructions_require_latex_math_delimiters(self):
+        _, openai_cls = self._post({"message": "Explain Z_3"})
+        instructions = openai_cls.return_value.responses.create.call_args.kwargs["instructions"]
+        self.assertIn("valid LaTeX", instructions)
+        self.assertIn("$...$", instructions)
+        self.assertIn("$$...$$", instructions)
+        self.assertIn("Markdown", instructions)
+
     def test_message_length_limit(self):
         response, _ = self._post({"message": "x" * 2001})
         self.assertEqual(response.status_code, 422)

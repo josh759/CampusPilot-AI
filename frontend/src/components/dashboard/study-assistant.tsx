@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import ReactMarkdown, { type Components } from "react-markdown";
+import rehypeKatex from "rehype-katex";
+import remarkMath from "remark-math";
 import { Icon } from "@/components/icon";
 import { ApiRequestError, apiRequest } from "@/lib/api/client";
 import type { Course, StudyAssistantChatRequest, StudyAssistantChatResponse } from "@/lib/api/types";
@@ -12,6 +15,37 @@ type StudyAssistantProps = {
   isLoading: boolean;
   redirectToLogin: () => void;
 };
+
+// Untrusted AI output: raw HTML is never parsed (no rehype-raw), and images and
+// links are unwrapped to plain text so the model cannot embed remote content or URLs.
+const markdownComponents: Components = {
+  p: ({ children }) => <p className="mt-2 break-words text-sm leading-6 text-slate-100 first:mt-0">{children}</p>,
+  h1: ({ children }) => <h4 className="mt-4 break-words text-base font-semibold text-white first:mt-0">{children}</h4>,
+  h2: ({ children }) => <h4 className="mt-4 break-words text-sm font-semibold text-white first:mt-0">{children}</h4>,
+  h3: ({ children }) => <h5 className="mt-3 break-words text-sm font-semibold text-slate-100 first:mt-0">{children}</h5>,
+  h4: ({ children }) => <h5 className="mt-3 break-words text-sm font-semibold text-slate-100 first:mt-0">{children}</h5>,
+  h5: ({ children }) => <h5 className="mt-3 break-words text-sm font-semibold text-slate-100 first:mt-0">{children}</h5>,
+  h6: ({ children }) => <h5 className="mt-3 break-words text-sm font-semibold text-slate-100 first:mt-0">{children}</h5>,
+  ul: ({ children }) => <ul className="mt-2 list-disc space-y-1 pl-5 text-sm leading-6 text-slate-100">{children}</ul>,
+  ol: ({ children }) => <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm leading-6 text-slate-100">{children}</ol>,
+  li: ({ children }) => <li className="break-words">{children}</li>,
+  strong: ({ children }) => <strong className="font-semibold text-white">{children}</strong>,
+  blockquote: ({ children }) => <blockquote className="mt-2 border-l-2 border-[#f1b28d]/60 pl-3 text-slate-200">{children}</blockquote>,
+  pre: ({ children }) => <pre className="mt-2 overflow-x-auto rounded-xl bg-white/10 p-3 text-xs leading-5 text-slate-100">{children}</pre>,
+  code: ({ children, className }) => className
+    ? <code className="font-mono">{children}</code>
+    : <code className="rounded bg-white/10 px-1 py-0.5 font-mono text-[0.85em] text-[#f6c4a6]">{children}</code>,
+};
+
+// Convert common \( \) and \[ \] delimiters to $ and $$ outside code fences/spans.
+function normalizeMathDelimiters(text: string): string {
+  return text
+    .split(/(```[\s\S]*?```|~~~[\s\S]*?~~~|`[^`\n]*`)/g)
+    .map((part, index) => index % 2 === 1 ? part : part
+      .replace(/\\\[([\s\S]+?)\\\]/g, (_m, math: string) => `\n$$\n${math.trim()}\n$$\n`)
+      .replace(/\\\(([\s\S]+?)\\\)/g, (_m, math: string) => `$${math.trim()}$`))
+    .join("");
+}
 
 type Exchange = { question: string; courseLabel: string; answer: string };
 
@@ -116,7 +150,7 @@ export function StudyAssistant({ courses, isLoading, redirectToLogin }: StudyAss
           <h3 className="mt-2 text-xs font-semibold text-slate-200">Your question</h3>
           <p className="mt-1 whitespace-pre-wrap break-words text-xs leading-5 text-slate-300">{exchange.question}</p>
           <h3 className="mt-4 text-sm font-semibold">Answer</h3>
-          <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-slate-100">{exchange.answer}</p>
+          <div className="mt-2 min-w-0 break-words"><ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[[rehypeKatex, { strict: "ignore", trust: false, throwOnError: false }]]} components={markdownComponents} disallowedElements={["img", "a"]} unwrapDisallowed skipHtml>{normalizeMathDelimiters(exchange.answer)}</ReactMarkdown></div>
           <p className="mt-3 text-[11px] leading-5 text-slate-400">AI-generated. Check important details against your course materials.</p>
         </div>
       )}

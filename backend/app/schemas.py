@@ -142,3 +142,56 @@ class StudyAssistantChatRequest(BaseModel):
 class StudyAssistantChatResponse(BaseModel):
     answer: str
     course_id: uuid.UUID | None = None
+
+
+class StudyConversationCreate(BaseModel):
+    course_id: uuid.UUID | None = None
+    title: str | None = Field(default=None, max_length=120)
+
+    @field_validator("title")
+    @classmethod
+    def normalize_title(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        return " ".join(value.split()) or None
+
+
+class StudyConversationSummary(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    title: str
+    course_id: uuid.UUID | None
+    created_at: datetime
+    updated_at: datetime
+
+
+class StudyMessageRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    role: Literal["user", "assistant"]
+    content: str
+    created_at: datetime
+
+
+class StudyConversationDetail(StudyConversationSummary):
+    messages: list[StudyMessageRead]
+
+
+class StudyMessageCreate(BaseModel):
+    message: str = Field(min_length=1, max_length=2000)
+
+    @field_validator("message")
+    @classmethod
+    def message_not_blank(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("Message must not be blank")
+        return value
+
+
+class StudyMessageExchange(BaseModel):
+    user_message: StudyMessageRead
+    assistant_message: StudyMessageRead
+    conversation: StudyConversationSummary

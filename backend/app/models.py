@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime, time
 
-from sqlalchemy import Boolean, CheckConstraint, DateTime, ForeignKey, Integer, String, Time, UniqueConstraint, Uuid, func
+from sqlalchemy import Boolean, CheckConstraint, DateTime, ForeignKey, Index, Integer, String, Text, Time, UniqueConstraint, Uuid, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -53,6 +53,10 @@ class User(Base):
         back_populates="user",
         cascade="all, delete-orphan",
     )
+    study_conversations: Mapped[list["StudyConversation"]] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
 
 
 class Course(Base):
@@ -86,6 +90,10 @@ class Course(Base):
         cascade="all, delete-orphan",
     )
     schedule_items: Mapped[list["ScheduleItem"]] = relationship(
+        back_populates="course",
+        passive_deletes=True,
+    )
+    study_conversations: Mapped[list["StudyConversation"]] = relationship(
         back_populates="course",
         passive_deletes=True,
     )
@@ -165,3 +173,83 @@ class ScheduleItem(Base):
 
     user: Mapped["User"] = relationship(back_populates="schedule_items")
     course: Mapped["Course | None"] = relationship(back_populates="schedule_items")
+
+class StudyConversation(Base):
+    __tablename__ = "study_conversations"
+    __table_args__ = (
+        Index("ix_study_conversations_user_id_updated_at", "user_id", "updated_at"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        Uuid,
+        primary_key=True,
+        default=uuid.uuid4,
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid,
+        ForeignKey("users.id", ondelete="CASCADE"),
+        index=True,
+        nullable=False,
+    )
+    course_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid,
+        ForeignKey("courses.id", ondelete="SET NULL"),
+        index=True,
+        nullable=True,
+    )
+    title: Mapped[str] = mapped_column(String(120), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
+    )
+
+    user: Mapped["User"] = relationship(back_populates="study_conversations")
+    course: Mapped["Course | None"] = relationship(back_populates="study_conversations")
+    messages: Mapped[list["StudyMessage"]] = relationship(
+        back_populates="conversation",
+        cascade="all, delete-orphan",
+        order_by="StudyMessage.created_at",
+    )
+
+
+class StudyMessage(Base):
+    __tablename__ = "study_messages"
+    __table_args__ = (
+        CheckConstraint(
+            "role IN ('user', 'assistant')",
+            name="ck_study_messages_role",
+        ),
+        Index(
+            "ix_study_messages_conversation_id_created_at",
+            "conversation_id",
+            "created_at",
+        ),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        Uuid,
+        primary_key=True,
+        default=uuid.uuid4,
+    )
+    conversation_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid,
+        ForeignKey("study_conversations.id", ondelete="CASCADE"),
+        index=True,
+        nullable=False,
+    )
+    role: Mapped[str] = mapped_column(String(16), nullable=False)
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
+    )
+
+    conversation: Mapped["StudyConversation"] = relationship(back_populates="messages")
